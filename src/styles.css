@@ -88,6 +88,7 @@ body {
 .simulation-button {
   border-radius: 999px;
   padding: 0.8rem 1.2rem;
+  cursor: pointer;
   transition: transform 180ms ease, opacity 180ms ease, background-color 180ms ease;
 }
 
@@ -313,6 +314,11 @@ select:focus {
   max-height: 340px;
 }
 
+.drawer-logs-table-wrapper {
+  max-height: none;
+  min-height: 0;
+}
+
 .service-table,
 .logs-table {
   width: 100%;
@@ -355,6 +361,7 @@ select:focus {
   padding: 0;
   color: var(--text);
   background: none;
+  cursor: pointer;
   font-weight: 700;
 }
 
@@ -450,9 +457,51 @@ select:focus {
   padding-right: 4px;
 }
 
+.drawer-tabs {
+  display: flex;
+  gap: 8px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  overflow: auto;
+}
+
+.drawer-tab {
+  flex: 0 0 auto;
+  padding: 0.55rem 0.9rem;
+  border-radius: 999px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: color 180ms ease, background-color 180ms ease, border-color 180ms ease, transform 180ms ease;
+}
+
+.drawer-tab:hover,
+.drawer-tab:focus-visible {
+  color: var(--text);
+  background: rgba(78, 137, 220, 0.1);
+  border-color: rgba(78, 137, 220, 0.2);
+  transform: translateY(-1px);
+}
+
+.drawer-tab-active {
+  color: var(--text);
+  background: rgba(78, 137, 220, 0.16);
+  border-color: rgba(78, 137, 220, 0.28);
+}
+
 .drawer-section {
   padding-top: 14px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.drawer-tab-panel {
+  min-height: 0;
+}
+
+.drawer-logs-panel {
+  display: grid;
+  grid-template-rows: auto auto auto 1fr;
+  min-height: 0;
 }
 
 .metadata-grid {

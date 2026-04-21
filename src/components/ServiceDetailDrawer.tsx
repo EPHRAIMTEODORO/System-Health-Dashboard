@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { formatTimestamp } from '../lib/format';
 import type { HealthService, HealthStatus, LogEntry, LogsFilters } from '../types/api';
 import { EmptyState } from './EmptyState';
@@ -22,6 +23,9 @@ type ServiceDetailDrawerProps = {
 };
 
 const simulationStatuses: HealthStatus[] = ['Healthy', 'Degraded', 'Unhealthy'];
+const drawerTabs = ['overview', 'dependencies', 'simulation', 'logs'] as const;
+
+type DrawerTab = (typeof drawerTabs)[number];
 
 export function ServiceDetailDrawer({
   isOpen,
@@ -40,6 +44,12 @@ export function ServiceDetailDrawer({
   onLogsFiltersChange,
   onLogsRefresh,
 }: ServiceDetailDrawerProps) {
+  const [activeTab, setActiveTab] = useState<DrawerTab>('overview');
+
+  useEffect(() => {
+    setActiveTab('overview');
+  }, [serviceName]);
+
   return (
     <aside className={`detail-drawer ${isOpen ? 'detail-drawer-open' : ''}`} aria-hidden={!isOpen}>
       <div className="drawer-header">
@@ -82,141 +92,168 @@ export function ServiceDetailDrawer({
             </article>
           </section>
 
-          <section className="drawer-section">
-            <div className="section-heading-row">
-              <div>
-                <h3>Overview</h3>
-              </div>
-              <button type="button" className="ghost-button" onClick={onRefresh}>
-                Refresh detail
+          <nav className="drawer-tabs" aria-label="Service detail tabs">
+            {drawerTabs.map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                className={`drawer-tab ${activeTab === tab ? 'drawer-tab-active' : ''}`}
+                onClick={() => setActiveTab(tab)}
+              >
+                {tab === 'overview'
+                  ? 'Overview'
+                  : tab === 'dependencies'
+                    ? 'Dependencies'
+                    : tab === 'simulation'
+                      ? 'Simulation'
+                      : 'Recent logs'}
               </button>
-            </div>
-            <p className="description-copy">{service.description}</p>
-          </section>
+            ))}
+          </nav>
 
-          <section className="drawer-section">
-            <div className="section-heading-row">
-              <div>
-                <h3>Dependencies</h3>
-              </div>
-            </div>
-
-            {Object.keys(service.dependencies).length === 0 ? (
-              <EmptyState title="No dependencies" message="This service has no upstream dependency records." />
-            ) : (
-              <ul className="dependency-list">
-                {Object.entries(service.dependencies).map(([dependencyName, dependency]) => (
-                  <li key={dependencyName}>
-                    <span>{dependencyName}</span>
-                    <strong className={`dependency-inline dependency-${dependency.status.toLowerCase()}`}>
-                      {dependency.status}
-                    </strong>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-
-          <section className="drawer-section">
-            <div className="section-heading-row">
-              <div>
-                <h3>Simulation</h3>
-              </div>
-            </div>
-            <div className="simulation-actions">
-              {simulationStatuses.map((status) => (
-                <button
-                  key={status}
-                  type="button"
-                  className={`simulation-button simulation-${status.toLowerCase()}`}
-                  disabled={isSimulating}
-                  onClick={() => void onSimulate(status)}
-                >
-                  {isSimulating ? 'Applying…' : `Set ${status}`}
+          {activeTab === 'overview' ? (
+            <section className="drawer-section drawer-tab-panel">
+              <div className="section-heading-row">
+                <div>
+                  <h3>Overview</h3>
+                </div>
+                <button type="button" className="ghost-button" onClick={onRefresh}>
+                  Refresh detail
                 </button>
-              ))}
-            </div>
-          </section>
-
-          <section className="drawer-section">
-            <div className="section-heading-row logs-heading-row">
-              <div>
-                <h3>Recent logs</h3>
               </div>
-              <button type="button" className="ghost-button" onClick={onLogsRefresh}>
-                Refresh logs
-              </button>
-            </div>
+              <p className="description-copy">{service.description}</p>
+            </section>
+          ) : null}
 
-            <div className="logs-controls">
-              <div>
-                <label htmlFor="logs-level">Level</label>
-                <select
-                  id="logs-level"
-                  value={logsFilters.level}
-                  onChange={(event) =>
-                    onLogsFiltersChange({
-                      ...logsFilters,
-                      level: event.target.value as LogsFilters['level'],
-                    })
-                  }
-                >
-                  <option value="all">All levels</option>
-                  <option value="INFO">INFO</option>
-                  <option value="WARN">WARN</option>
-                  <option value="ERROR">ERROR</option>
-                </select>
+          {activeTab === 'dependencies' ? (
+            <section className="drawer-section drawer-tab-panel">
+              <div className="section-heading-row">
+                <div>
+                  <h3>Dependencies</h3>
+                </div>
               </div>
-              <div>
-                <label htmlFor="logs-limit">Limit</label>
-                <input
-                  id="logs-limit"
-                  type="number"
-                  min={1}
-                  max={200}
-                  value={logsFilters.limit}
-                  onChange={(event) =>
-                    onLogsFiltersChange({
-                      ...logsFilters,
-                      limit: Number(event.target.value) || 25,
-                    })
-                  }
-                />
+
+              {Object.keys(service.dependencies).length === 0 ? (
+                <EmptyState title="No dependencies" message="This service has no upstream dependency records." />
+              ) : (
+                <ul className="dependency-list">
+                  {Object.entries(service.dependencies).map(([dependencyName, dependency]) => (
+                    <li key={dependencyName}>
+                      <span>{dependencyName}</span>
+                      <strong className={`dependency-inline dependency-${dependency.status.toLowerCase()}`}>
+                        {dependency.status}
+                      </strong>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          ) : null}
+
+          {activeTab === 'simulation' ? (
+            <section className="drawer-section drawer-tab-panel">
+              <div className="section-heading-row">
+                <div>
+                  <h3>Simulation</h3>
+                </div>
               </div>
-            </div>
+              <div className="simulation-actions">
+                {simulationStatuses.map((status) => (
+                  <button
+                    key={status}
+                    type="button"
+                    className={`simulation-button simulation-${status.toLowerCase()}`}
+                    disabled={isSimulating}
+                    onClick={() => void onSimulate(status)}
+                  >
+                    {isSimulating ? 'Applying…' : `Set ${status}`}
+                  </button>
+                ))}
+              </div>
+            </section>
+          ) : null}
 
-            {logsLoading ? <div className="inline-message">Loading logs…</div> : null}
-            {logsError ? <div className="error-banner">{logsError}</div> : null}
+          {activeTab === 'logs' ? (
+            <section className="drawer-section drawer-tab-panel drawer-logs-panel">
+              <div className="section-heading-row logs-heading-row">
+                <div>
+                  <h3>Recent logs</h3>
+                </div>
+                <button type="button" className="ghost-button" onClick={onLogsRefresh}>
+                  Refresh logs
+                </button>
+              </div>
 
-            {!logsLoading && !logsError && logs.length === 0 ? (
-              <EmptyState title="No logs found" message="Try broadening the log filters or increasing the result limit." />
-            ) : null}
+              <div className="logs-controls">
+                <div>
+                  <label htmlFor="logs-level">Level</label>
+                  <select
+                    id="logs-level"
+                    value={logsFilters.level}
+                    onChange={(event) =>
+                      onLogsFiltersChange({
+                        ...logsFilters,
+                        level: event.target.value as LogsFilters['level'],
+                      })
+                    }
+                  >
+                    <option value="all">All levels</option>
+                    <option value="INFO">INFO</option>
+                    <option value="WARN">WARN</option>
+                    <option value="ERROR">ERROR</option>
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="logs-limit">Limit</label>
+                  <input
+                    id="logs-limit"
+                    type="number"
+                    min={1}
+                    max={200}
+                    value={logsFilters.limit}
+                    onChange={(event) =>
+                      onLogsFiltersChange({
+                        ...logsFilters,
+                        limit: Number(event.target.value) || 25,
+                      })
+                    }
+                  />
+                </div>
+              </div>
 
-            {logs.length > 0 ? (
-              <div className="logs-table-wrapper">
-                <table className="logs-table">
-                  <thead>
-                    <tr>
-                      <th>Timestamp</th>
-                      <th>Level</th>
-                      <th>Message</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {logs.map((entry) => (
-                      <tr key={`${entry.timestamp}-${entry.level}-${entry.message}`}>
-                        <td>{formatTimestamp(entry.timestamp)}</td>
-                        <td>
-                          <span className={`log-level log-${entry.level.toLowerCase()}`}>{entry.level}</span>
-                        </td>
-                        <td>{entry.message}</td>
+              {logsLoading ? <div className="inline-message">Loading logs…</div> : null}
+              {logsError ? <div className="error-banner">{logsError}</div> : null}
+
+              {!logsLoading && !logsError && logs.length === 0 ? (
+                <EmptyState title="No logs found" message="Try broadening the log filters or increasing the result limit." />
+              ) : null}
+
+              {logs.length > 0 ? (
+                <div className="logs-table-wrapper drawer-logs-table-wrapper">
+                  <table className="logs-table">
+                    <thead>
+                      <tr>
+                        <th>Timestamp</th>
+                        <th>Level</th>
+                        <th>Message</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : null}
-          </section>
+                    </thead>
+                    <tbody>
+                      {logs.map((entry) => (
+                        <tr key={`${entry.timestamp}-${entry.level}-${entry.message}`}>
+                          <td>{formatTimestamp(entry.timestamp)}</td>
+                          <td>
+                            <span className={`log-level log-${entry.level.toLowerCase()}`}>{entry.level}</span>
+                          </td>
+                          <td>{entry.message}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : null}
+            </section>
+          ) : null}
         </div>
       ) : null}
     </aside>

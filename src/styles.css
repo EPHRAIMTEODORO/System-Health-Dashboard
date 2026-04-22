@@ -336,8 +336,10 @@ select:focus {
 }
 
 .drawer-logs-table-wrapper {
-  max-height: none;
+  max-height: min(52vh, 560px);
   min-height: 0;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
 }
 
 .service-table,
